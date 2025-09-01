@@ -11,6 +11,8 @@ import Shop from "@/pages/shop";
 import Membership from "@/pages/membership";
 import Classes from "@/pages/classes";
 import Checkout from "@/pages/checkout";
+import SignIn from "@/pages/signin";
+import SignUp from "@/pages/signup";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,6 +25,8 @@ function Router() {
           <Route path="/shop" component={Shop} />
           <Route path="/membership" component={Membership} />
           <Route path="/classes" component={Classes} />
+          <Route path="/signin" component={SignIn} />
+          <Route path="/signup" component={SignUp} />
         </>
       ) : (
         <>
@@ -31,6 +35,8 @@ function Router() {
           <Route path="/membership" component={Membership} />
           <Route path="/classes" component={Classes} />
           <Route path="/checkout" component={Checkout} />
+          <Route path="/signin" component={SignIn} />
+          <Route path="/signup" component={SignUp} />
         </>
       )}
       <Route component={NotFound} />

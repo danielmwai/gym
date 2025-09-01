@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout, authProvider } = useUnifiedAuth();
   const { getItemCount, toggleCart } = useCart();
 
   const navItems = [
@@ -91,7 +91,7 @@ export default function Navigation() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" data-testid="button-user-menu">
                     <User className="h-5 w-5 mr-2" />
-                    {user?.firstName || 'Member'}
+                    {user?.firstName || user?.email?.split('@')[0] || 'Member'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -101,18 +101,21 @@ export default function Navigation() {
                   <DropdownMenuItem asChild>
                     <Link href="/membership" data-testid="link-my-membership">My Membership</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" data-testid="link-logout">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </a>
+                  <DropdownMenuItem onClick={logout} data-testid="button-logout">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild data-testid="button-join-now">
-                <a href="/api/login">Join Now</a>
-              </Button>
+              <div className="flex space-x-2">
+                <Button asChild variant="outline" size="sm" data-testid="button-sign-in">
+                  <Link href="/signin">Sign In</Link>
+                </Button>
+                <Button asChild size="sm" data-testid="button-sign-up">
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </div>
             )}
           </div>
           
@@ -173,22 +176,31 @@ export default function Navigation() {
                     >
                       My Orders
                     </Link>
-                    <a
-                      href="/api/logout"
-                      className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
-                      data-testid="link-mobile-logout"
+                    <button
+                      onClick={logout}
+                      className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium w-full text-left"
+                      data-testid="button-mobile-logout"
                     >
                       Logout
-                    </a>
+                    </button>
                   </div>
                 ) : (
-                  <a
-                    href="/api/login"
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground block px-3 py-2 rounded-md text-base font-medium text-center smooth-transition"
-                    data-testid="button-mobile-join"
-                  >
-                    Join Now
-                  </a>
+                  <div className="space-y-2">
+                    <Link
+                      href="/signin"
+                      className="text-foreground hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
+                      data-testid="link-mobile-signin"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground block px-3 py-2 rounded-md text-base font-medium text-center smooth-transition"
+                      data-testid="link-mobile-signup"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

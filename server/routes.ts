@@ -10,14 +10,18 @@ import {
   insertMembershipPlanSchema,
   insertProductSchema,
   insertNewsletterSubscriptionSchema,
-  insertContactSubmissionSchema
+  insertContactSubmissionSchema,
+  signUpSchema,
+  signInSchema
 } from "@shared/schema";
+import { processSignUp, processSignIn, isEmailAuthenticated } from "./lib/emailAuth";
+import { createSessionToken } from "./lib/session";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
+  // Replit Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -25,6 +29,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Email/Password Authentication routes
+  app.post('/api/auth/email/signup', async (req, res) => {
+    try {
+      const user = await processSignUp(req.body);
+      
+      // Create session token
+      const sessionToken = await createSessionToken({
+        userId: user.id,
+        user,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      // Set session cookie
+      res.cookie('emailSession', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
+
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      console.error("Email signup error:", error);
+      res.status(400).json({ message: error.message || "Failed to sign up" });
+    }
+  });
+
+  app.post('/api/auth/email/signin', async (req, res) => {
+    try {
+      const user = await processSignIn(req.body);
+      
+      // Create session token
+      const sessionToken = await createSessionToken({
+        userId: user.id,
+        user,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      // Set session cookie
+      res.cookie('emailSession', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
+
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      console.error("Email signin error:", error);
+      res.status(400).json({ message: error.message || "Failed to sign in" });
+    }
+  });
+
+  app.post('/api/auth/email/logout', async (req, res) => {
+    try {
+      // Clear session cookie
+      res.clearCookie('emailSession', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
+
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Email logout error:", error);
+      res.status(500).json({ message: "Failed to log out" });
+    }
+  });
+
+  app.get('/api/auth/email/user', isEmailAuthenticated, async (req: any, res) => {
+    try {
+      // Return user without password
+      const { password, ...userWithoutPassword } = req.emailUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching email user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
