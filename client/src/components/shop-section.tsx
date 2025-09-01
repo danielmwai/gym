@@ -10,7 +10,7 @@ export default function ShopSection() {
   const { addItem } = useCart();
   
   const { data: products, isLoading } = useQuery<Product[]>({
-    queryKey: ["/api/products", { featured: true }],
+    queryKey: ["/api/products?featured=true"],
   });
 
   const defaultProducts = [
@@ -90,7 +90,7 @@ export default function ShopSection() {
                 data-testid={`card-product-${index}`}
               >
                 <img 
-                  src={product.imageUrl} 
+                  src={product.imageUrl || "https://images.unsplash.com/photo-1506629905607-45848c21bc27?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200"} 
                   alt={product.name}
                   className="w-full h-48 object-cover group-hover:scale-105 smooth-transition" 
                   data-testid={`img-product-${index}`}

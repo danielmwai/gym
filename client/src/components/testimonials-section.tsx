@@ -6,7 +6,7 @@ import type { Testimonial } from "@shared/schema";
 
 export default function TestimonialsSection() {
   const { data: testimonials, isLoading } = useQuery<Testimonial[]>({
-    queryKey: ["/api/testimonials", { featured: true }],
+    queryKey: ["/api/testimonials?featured=true"],
   });
 
   const defaultTestimonials = [
